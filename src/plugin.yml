@@ -1,0 +1,8 @@
+name: HardcoreCoop
+version: 1.0
+author: Poenzel
+main: be.poenzel.hardcorecoop.HardcoreCoop
+commands:
+  hc:
+    description: Main command for the HardcoreCoop
+    permission: hc.use
