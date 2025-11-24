@@ -5,6 +5,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 
@@ -17,17 +20,23 @@ public class TimerHC extends BukkitRunnable {
 
     public TimerHC(HardcoreCoop main){
         this.main = main;
+        this.timer = (int) main.getCurrentTimer();
     }
 
+    // Current Hardcore Session Timer
     @Override
     public void run() {
 
-        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"title @a actionbar '" + secondsToFormat(timer) +"'");
-        timer++;
         if (!main.isState(StateHC.RUNNING)){
-            timer = 0;
+            // RESET for FINISHED & WAITING in case /hc end is performed before the game actually ends by itself
+            if(main.isState(StateHC.FINISHED) || main.isState(StateHC.WAITING)) timer = 0;
+            main.setCurrentTimer(timer);
+            main.saveCurrentTimer(main.getCurrentTimer());
             cancel();
         }
+
+        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"title @a actionbar '" + secondsToFormat(timer) +"'");
+        timer++;
 
     }
 
@@ -38,4 +47,6 @@ public class TimerHC extends BukkitRunnable {
         long s = d.getSeconds() % 60;
         return String.format("%02d:%02d:%02d",h, m, s);
     }
+
+
 }

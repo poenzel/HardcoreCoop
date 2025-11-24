@@ -1,5 +1,5 @@
 package be.poenzel.hardcorecoop;
 
 public enum StateHC {
-    RUNNING, FINISHED, WAITING;
+    RUNNING, FROZEN, FINISHED, WAITING;
 }
