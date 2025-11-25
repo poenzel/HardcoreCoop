@@ -22,15 +22,17 @@ public class HealthUpdate extends BukkitRunnable {
             cancel();
         }
 
-        boolean absorption = false;
         Integer amplifier = 0;
         Integer duration = 0;
+        boolean new_absorption_effect = false;
 
         for(Player p : main.getPlayers()){
-            if(p.hasPotionEffect(PotionEffectType.ABSORPTION)){
+            // Will not be updated if the effect was already running => no reset of absorption level
+            if((!main.isAbsorptionActive()) && p.hasPotionEffect(PotionEffectType.ABSORPTION)){
                 amplifier = p.getPotionEffect(PotionEffectType.ABSORPTION).getAmplifier();
                 duration = p.getPotionEffect(PotionEffectType.ABSORPTION).getDuration();
-                absorption = true;
+                main.setAbsorptionActive(true);
+                new_absorption_effect = true;
                 main.setAbsorption(p.getAbsorptionAmount());
             }
         }
@@ -38,9 +40,20 @@ public class HealthUpdate extends BukkitRunnable {
         for(Player p : main.getPlayers()){
             p.setHealth(main.getHealth());
             if(main.getHunger()) p.setFoodLevel(main.getFoodLevel());
-            if (absorption){
-                p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, duration, amplifier));
+            if (main.isAbsorptionActive()){
+                if(new_absorption_effect && !(p.hasPotionEffect(PotionEffectType.ABSORPTION))) p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, duration, amplifier));
+                p.setAbsorptionAmount(main.getAbsorption());
+                //Bukkit.broadcastMessage("Current absorption level for " + p.getName() + " is : " + p.getAbsorptionAmount());
             }
+
+            // Update if potion effect faded
+            if(!p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+                main.setAbsorptionActive(false);
+            }
+
         }
+
+
+
     }
 }

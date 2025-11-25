@@ -23,6 +23,7 @@ public class HardcoreCoop extends JavaPlugin {
     private double health = 20;
     private Integer foodLevel = 20;
     private double absorption = 0;
+    private boolean absorptionActive = false;
 
     @Override
     public void onEnable() {
@@ -118,6 +119,14 @@ public class HardcoreCoop extends JavaPlugin {
 
     public void setHunger(boolean hunger){
         this.hunger = hunger;
+    }
+
+    public boolean isAbsorptionActive(){
+        return this.absorptionActive;
+    }
+
+    public void setAbsorptionActive(boolean absorptionActive){
+        this.absorptionActive = absorptionActive;
     }
 
     public void saveCurrentTimer(long seconds){

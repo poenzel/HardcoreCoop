@@ -75,6 +75,15 @@ public class CommandHC implements CommandExecutor {
                         player.sendMessage("Current timer is : " + main.getCurrentTimer());
                     }
 
+                    // Method to check setAbsorptionAmount behavior -> only works when Absorption is active. Capped to level of Absorption.
+                    if (args[0].equalsIgnoreCase("absorption")){
+                        if(args.length == 1){
+                            player.sendMessage("Missing value for absorption.");
+                        }
+                        String absorption = args[1];
+                        player.setAbsorptionAmount(Integer.parseInt(absorption));
+                    }
+
                     if (args[0].equalsIgnoreCase("hunger")){
                         // TODO : Figure out of Hunger can be toggled on/off during session. Shouldn't have any impact.
                         /*
