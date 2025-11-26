@@ -4,6 +4,8 @@ import be.poenzel.hardcorecoop.HardcoreCoop;
 import be.poenzel.hardcorecoop.StateHC;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffectType;
 
@@ -39,16 +42,9 @@ public class PlayerListenersHC implements Listener {
         if (!(event.getEntity() instanceof Player)) return;
         Player player = (Player) event.getEntity();
         Double amount = event.getAmount();
+        if(event.getRegainReason().equals(EntityRegainHealthEvent.RegainReason.SATIATED)) amount = amount/Math.max(main.getPlayers().size(),1);
         Double targetHealth = player.getHealth();
         main.setHealth(min(main.getHealth()+amount,20));
-        /*
-        List<Player> all_players = main.getPlayers();
-        for(Player p : all_players){
-            if(!p.getName().equalsIgnoreCase(player.getName())){
-                p.setHealth(targetHealth);
-            }
-        }
-        */
     }
 
     @EventHandler
@@ -59,14 +55,6 @@ public class PlayerListenersHC implements Listener {
         Integer foodLevel = player.getFoodLevel();
         event.setCancelled(true);
         main.setFoodLevel(event.getFoodLevel());
-        /*
-        List<Player> all_players = main.getPlayers();
-        for(Player p : all_players){
-            if(!p.getName().equalsIgnoreCase(player.getName())){
-                p.setFoodLevel(foodLevel);
-            }
-        }
-        */
     }
 
     @EventHandler
@@ -79,15 +67,15 @@ public class PlayerListenersHC implements Listener {
 
         Player player = (Player) event.getEntity();
 
-        Double absorptionValue = event.getDamage(EntityDamageEvent.DamageModifier.ABSORPTION);
+        // Double absorptionValue = event.getDamage(EntityDamageEvent.DamageModifier.ABSORPTION);
         Double absorbedDamage = event.getOriginalDamage(EntityDamageEvent.DamageModifier.ABSORPTION);
-        Double rawDamage = event.getDamage();
+        //Double rawDamage = event.getDamage();
         Double damageValue = event.getFinalDamage() - absorbedDamage;
 
         // damageValue + absorption = value of dmg taken. In practice,FinalDamage = # of red hearts lost
 
-        Bukkit.broadcastMessage("Raw Original Damage : "+ rawDamage + ", AbsorbedDamage : "+ absorbedDamage + ", Final Damage : "+ event.getFinalDamage());
-        Bukkit.broadcastMessage("§4[Hardcore Co-op] §8: §6" + player.getName() + "§8 took §c" + damageValue + "§8 of damage");
+        //Bukkit.broadcastMessage("Raw Original Damage : "+ rawDamage + ", AbsorbedDamage : "+ absorbedDamage + ", Final Damage : "+ event.getFinalDamage());
+        Bukkit.broadcastMessage("§4[Hardcore Co-op] §8: §6" + player.getName() + "§8 took §c" + round(damageValue,1) + "§8 of damage");
 
 
         double health = main.getHealth();
@@ -103,16 +91,17 @@ public class PlayerListenersHC implements Listener {
             health = Math.max(0, health - damageValue);
         }
 
-        Bukkit.broadcastMessage("Absorption : "+Double.toString(absorption) +", Health : "+ Double.toString(health));
+        //Bukkit.broadcastMessage("Absorption : "+absorption +", Health : "+ health);
 
         main.setHealth(health);
         main.setAbsorption(absorption);
         main.setAbsorptionActive(absorption > 0);
 
-        if(absorption==0){
-            for(Player p : main.getPlayers()){
+        for(Player p : main.getPlayers()){
+            if(absorption==0){
                 p.removePotionEffect(PotionEffectType.ABSORPTION);
             }
+            p.playHurtAnimation(0);
         }
 
         if(health==0){
@@ -121,24 +110,36 @@ public class PlayerListenersHC implements Listener {
         }
         event.setCancelled(true);
 
-        /*
-        double newHealth = max(main.getHealth() + main.getAbsorption() - damageValue,0);
-        if(newHealth==0){
-            main.setState(StateHC.FINISHED);
-            Bukkit.broadcastMessage("Game Over. To restart, type /hc end to go back to lobby.");
-        }
-        if(main.getAbsorption() > 0){
-            if(newHealth > 20 ){
-                main.setAbsorption(main.getAbsorption() - damageValue);
-            }
-            else {
-                main.setAbsorption(0);
-            }
-        }
-        main.setHealth(newHealth);
-        */
 
+    }
 
+    @EventHandler
+    public void onPlayerPortal(PlayerPortalEvent e) {
+
+        if(!main.isState(StateHC.RUNNING)) return;
+        World fromWorld = e.getFrom().getWorld();
+        switch (e.getCause()) {
+            case NETHER_PORTAL:
+                switch (fromWorld.getEnvironment()) {
+                    case NORMAL:
+                        e.getTo().setWorld(Bukkit.getWorld("hc_nether"));
+                        break;
+                    case NETHER:
+                        Location newTo = e.getFrom().multiply(8.0D);
+                        newTo.setWorld(Bukkit.getWorld("hc_world"));
+                        e.setTo(newTo);
+                        break;
+                }
+            case END_PORTAL:
+                switch (fromWorld.getEnvironment()){
+                    case NORMAL :
+                        e.getTo().setWorld(Bukkit.getWorld("hc_end"));
+                        break;
+                    case THE_END:
+                        e.getTo().setWorld(Bukkit.getWorld("hc_world"));
+                        break;
+                }
+        }
     }
 
     @EventHandler
@@ -146,5 +147,10 @@ public class PlayerListenersHC implements Listener {
         if(!main.isState(StateHC.FINISHED)) return;
         Player player = event.getPlayer();
         player.setGameMode(GameMode.SPECTATOR);
+    }
+
+    private static double round (double value, int precision) {
+        int scale = (int) Math.pow(10, precision);
+        return (double) Math.round(value * scale) / scale;
     }
 }
