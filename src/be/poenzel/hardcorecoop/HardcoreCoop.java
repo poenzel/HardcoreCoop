@@ -2,6 +2,8 @@ package be.poenzel.hardcorecoop;
 
 import be.poenzel.hardcorecoop.listeners.PlayerListenersHC;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +26,8 @@ public class HardcoreCoop extends JavaPlugin {
     private Integer foodLevel = 20;
     private double absorption = 0;
     private boolean absorptionActive = false;
+    private Location hcSpawn;
+    private Location lobbySpawn;
 
     @Override
     public void onEnable() {
@@ -59,7 +63,10 @@ public class HardcoreCoop extends JavaPlugin {
         pm.registerEvents(new PlayerListenersHC(this), this);
 
         getCommand("hc").setExecutor(new CommandHC(this));
-
+        World lobby = Bukkit.getWorld("world");
+        Location spawnLobby = Bukkit.getWorld("world").getSpawnLocation();
+        spawnLobby.setY(lobby.getHighestBlockYAt(spawnLobby));
+        this.lobbySpawn = spawnLobby;
         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"gamerule logAdminCommands false");
 
     }
@@ -127,6 +134,18 @@ public class HardcoreCoop extends JavaPlugin {
 
     public void setAbsorptionActive(boolean absorptionActive){
         this.absorptionActive = absorptionActive;
+    }
+
+    public void setHcSpawn(Location loc){
+        this.hcSpawn=loc;
+    }
+
+    public Location getHcSpawn(){
+        return this.hcSpawn;
+    }
+
+    public Location getLobbySpawn(){
+        return this.lobbySpawn;
     }
 
     public void saveCurrentTimer(long seconds){

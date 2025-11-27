@@ -41,6 +41,11 @@ public class CommandHC implements CommandExecutor {
                             player.sendMessage("The session is already running. To end it, type /hc end.");
                             return true;
                         }
+                        if(main.isState(StateHC.WAITING)){
+                            createWorld();
+                        }
+                        main.setFoodLevel(20);
+                        main.setHealth(20);
                         // Once FINISHED, state has to go back to WAITING before being launched again.
                         if(main.isState(StateHC.WAITING) || main.isState(StateHC.FROZEN)) {
                             main.setState(StateHC.RUNNING);
@@ -70,7 +75,13 @@ public class CommandHC implements CommandExecutor {
                         if(folder.exists()) {
                             setFrozenState("MELTED");
                         }
+                        main.setHealth(20);
+                        main.setFoodLevel(20);
                         main.setState(StateHC.WAITING);
+                        for(Player p : main.getPlayers()){
+                            p.teleport(main.getLobbySpawn());
+                            p.setGameMode(GameMode.SURVIVAL);
+                        }
                     }
 
                     if (args[0].equalsIgnoreCase("help")){
@@ -85,8 +96,10 @@ public class CommandHC implements CommandExecutor {
                         Location hc_spawn = hc_world.getSpawnLocation();
                         Block highest_block = hc_world.getHighestBlockAt(hc_spawn);
                         hc_spawn.setY(highest_block.getY() +1 );
+                        main.setHcSpawn(hc_spawn);
                         for(Player p : main.getPlayers()){
                             p.teleport(hc_spawn);
+                            p.setRespawnLocation(hc_spawn);
                         }
 
 
@@ -94,6 +107,7 @@ public class CommandHC implements CommandExecutor {
                         wc_nether.environment(World.Environment.NETHER);
                         wc_nether.generateStructures(true);
                         wc_nether.createWorld();
+
                         WorldCreator wc_end=  new WorldCreator("hc_end");
                         wc_end.environment(World.Environment.THE_END);
                         wc_end.generateStructures(true);
@@ -103,7 +117,8 @@ public class CommandHC implements CommandExecutor {
                     }
 
                     if (args[0].equalsIgnoreCase("delete_world")){
-                        System.out.println("dull");
+                        File file = Bukkit.getServer().getWorldContainer();
+                        Bukkit.broadcastMessage(file.getPath());
 
                     }
 
@@ -156,6 +171,36 @@ public class CommandHC implements CommandExecutor {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void createWorld(){
+        WorldCreator wc = new WorldCreator("hc_world");
+        wc.environment(World.Environment.NORMAL);
+        wc.generateStructures(true);
+        World hcWorld = wc.createWorld();
+        hcWorld.setDifficulty(Difficulty.HARD);
+        Location hc_spawn = hcWorld.getSpawnLocation();
+        Block highest_block = hcWorld.getHighestBlockAt(hc_spawn);
+        hc_spawn.setY(highest_block.getY() +1 );
+        main.setHcSpawn(hc_spawn);
+        for(Player p : main.getPlayers()){
+            p.teleport(hc_spawn);
+            p.setRespawnLocation(hc_spawn);
+        }
+
+
+        WorldCreator wc_nether = new WorldCreator("hc_nether");
+        wc_nether.environment(World.Environment.NETHER);
+        wc_nether.generateStructures(true);
+        World netherWorld = wc_nether.createWorld();
+        netherWorld.setDifficulty(Difficulty.HARD);
+
+        WorldCreator wc_end=  new WorldCreator("hc_end");
+        wc_end.environment(World.Environment.THE_END);
+        wc_end.generateStructures(true);
+        World endWorld = wc_end.createWorld();
+        endWorld.setDifficulty(Difficulty.HARD);
+
     }
 
 
