@@ -14,7 +14,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HardcoreCoop extends JavaPlugin {
 
@@ -28,6 +30,8 @@ public class HardcoreCoop extends JavaPlugin {
     private boolean absorptionActive = false;
     private Location hcSpawn;
     private Location lobbySpawn;
+    private float saturation;
+    private Map<Player, Integer> hurtedPlayers = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -148,6 +152,37 @@ public class HardcoreCoop extends JavaPlugin {
         return this.lobbySpawn;
     }
 
+    public float getSaturation(){
+        return this.saturation;
+    }
+
+    public void setSaturation(float saturation){
+        this.saturation = saturation;
+    }
+
+    public void updateHurtPlayer(Player player){
+        if(this.hurtedPlayers.containsKey(player)) {
+            Integer currentTimer = this.hurtedPlayers.get(player);
+            if(currentTimer == 1){
+                this.hurtedPlayers.remove(player);
+                return;
+            }
+            this.hurtedPlayers.put(player, currentTimer - 1);
+        }
+    }
+
+    public boolean isHurt(Player player){
+        return this.hurtedPlayers.containsKey(player);
+    }
+
+    public void addHurtPlayer(Player player){
+        this.hurtedPlayers.put(player, 10);
+    }
+
+
+
+
+
     public void saveCurrentTimer(long seconds){
         File file = new File(this.getDataFolder(), "current_timer.txt");
 
@@ -187,3 +222,4 @@ public class HardcoreCoop extends JavaPlugin {
     }
 
 }
+

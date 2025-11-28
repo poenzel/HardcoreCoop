@@ -38,7 +38,15 @@ public class PlayerListenersHC implements Listener {
     public void onJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
         if(!main.getPlayers().contains(player)) main.getPlayers().add(player);
+        if(main.isState(StateHC.FROZEN)){
+            Location current_location = player.getLocation();
+            current_location.setWorld(Bukkit.getWorld("hc_world"));
+            player.teleport(current_location);
+        }
+        if(!main.isState(StateHC.WAITING)) return;
+
         player.teleport(main.getLobbySpawn());
+        player.setGameMode(GameMode.ADVENTURE);
     }
 
     @EventHandler
@@ -48,6 +56,7 @@ public class PlayerListenersHC implements Listener {
         Player player = (Player) event.getEntity();
         Double amount = event.getAmount();
         if(event.getRegainReason().equals(EntityRegainHealthEvent.RegainReason.SATIATED)) amount = amount/Math.max(main.getPlayers().size(),1);
+        //if(event.getRegainReason().equals(EntityRegainHealthEvent.RegainReason.EATING)) amount = amount/Math.max(main.getPlayers().size()-1,1);
         Double targetHealth = player.getHealth();
         main.setHealth(min(main.getHealth()+amount,20));
     }
@@ -58,28 +67,32 @@ public class PlayerListenersHC implements Listener {
         if (!main.getHunger()) return;
         Player player = (Player) event.getEntity();
         Integer foodLevel = player.getFoodLevel();
-        event.setCancelled(true);
+        //event.setCancelled(true);
         main.setFoodLevel(event.getFoodLevel());
+        main.setSaturation(player.getSaturation());
+
     }
 
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
         if (!main.isState(StateHC.RUNNING)) return;
 
-        //TODO : Check if damage kill?
-
         if (!(event.getEntity() instanceof Player)) return;
 
         Player player = (Player) event.getEntity();
 
-        // Double absorptionValue = event.getDamage(EntityDamageEvent.DamageModifier.ABSORPTION);
+
+        if(main.isHurt(player)){
+            event.setCancelled(true);
+            return;
+        } else {
+            main.addHurtPlayer(player);
+        }
+
+
         Double absorbedDamage = event.getOriginalDamage(EntityDamageEvent.DamageModifier.ABSORPTION);
-        //Double rawDamage = event.getDamage();
         Double damageValue = event.getFinalDamage() - absorbedDamage;
 
-        // damageValue + absorption = value of dmg taken. In practice,FinalDamage = # of red hearts lost
-
-        //Bukkit.broadcastMessage("Raw Original Damage : "+ rawDamage + ", AbsorbedDamage : "+ absorbedDamage + ", Final Damage : "+ event.getFinalDamage());
         Bukkit.broadcastMessage("§4[Hardcore Co-op] §8: §6" + player.getName() + "§8 took §c" + round(damageValue,1) + "§8 of damage");
 
 
@@ -87,7 +100,6 @@ public class PlayerListenersHC implements Listener {
         double absorption = main.getAbsorption();
 
         // If absorption = 0 => nothing is used from absorption and nothing is deduced from the damages. If absorption is 1 and Damage is 2, 1 is used. If absorption is 4 and Damage is 2, 2 is consumed.
-        // Due to Absorption, FinalDamage is set to 0 if Absorption > damageValue. If > Absorption => translates normally. This is therefore hard to compute.
         double usedFromAbsorption = Math.min(absorption, damageValue);
         absorption -= usedFromAbsorption;
         damageValue -= usedFromAbsorption;
@@ -113,12 +125,9 @@ public class PlayerListenersHC implements Listener {
                 player.playEffect(EntityEffect.TOTEM_RESURRECT);
 
                 if(inv.getItemInMainHand().getType().equals(Material.TOTEM_OF_UNDYING)){
-                    Bukkit.broadcastMessage("HE HAS IT IN HIS HAND ! or does he ? "+inv.getItemInMainHand().getType());
                     player.getInventory().setItemInMainHand(null);
                 }
                 else {
-                    Bukkit.broadcastMessage("HE HAS IT IN HIS OFF HAND ! or does he ? "+inv.getItemInOffHand().getType());
-
                     player.getInventory().setItemInOffHand(null);
                 }
 
@@ -134,12 +143,15 @@ public class PlayerListenersHC implements Listener {
                 p.removePotionEffect(PotionEffectType.ABSORPTION);
             }
             p.playHurtAnimation(0);
+            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT,1f,1f);
         }
 
         if(health==0){
             main.setState(StateHC.FINISHED);
             Bukkit.broadcastMessage("Game Over. To restart, type /hc end to go back to lobby.");
         }
+
+
         event.setCancelled(true);
 
 

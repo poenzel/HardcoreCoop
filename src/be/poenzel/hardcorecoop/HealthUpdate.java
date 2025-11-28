@@ -39,7 +39,9 @@ public class HealthUpdate extends BukkitRunnable {
 
         for(Player p : main.getPlayers()){
             p.setHealth(main.getHealth());
-            if(main.getHunger()) p.setFoodLevel(main.getFoodLevel());
+            p.setFoodLevel(main.getFoodLevel());
+            //p.setSaturation(main.getSaturation());
+            main.updateHurtPlayer(p);
             if (main.isAbsorptionActive()){
                 if(new_absorption_effect && !(p.hasPotionEffect(PotionEffectType.ABSORPTION))) p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, duration, amplifier));
                 p.setAbsorptionAmount(main.getAbsorption());

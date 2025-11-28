@@ -1,5 +1,7 @@
 package be.poenzel.hardcorecoop;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -35,7 +37,10 @@ public class TimerHC extends BukkitRunnable {
             cancel();
         }
 
-        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"title @a actionbar '" + secondsToFormat(timer) +"'");
+        //Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"title @a actionbar '" + secondsToFormat(timer) +"'");
+        for(Player p : main.getPlayers()){
+            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(secondsToFormat(timer)));
+        }
         timer++;
 
     }

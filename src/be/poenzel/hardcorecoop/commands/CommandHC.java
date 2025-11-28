@@ -42,10 +42,20 @@ public class CommandHC implements CommandExecutor {
                             return true;
                         }
                         if(main.isState(StateHC.WAITING)){
-                            createWorld();
+                            Bukkit.broadcastMessage("§aCreating worlds...");
+                            createWorlds();
+                            Bukkit.broadcastMessage("§7Teleporting players");
+                            Location hc_spawn = main.getHcSpawn();
+                            for (Player p : main.getPlayers()) {
+                                p.getInventory().clear();
+                                p.teleport(hc_spawn);
+                                p.setGameMode(GameMode.SURVIVAL);
+                                p.setRespawnLocation(hc_spawn);
+                            }
+                            main.setFoodLevel(20);
+                            main.setHealth(20);
                         }
-                        main.setFoodLevel(20);
-                        main.setHealth(20);
+
                         // Once FINISHED, state has to go back to WAITING before being launched again.
                         if(main.isState(StateHC.WAITING) || main.isState(StateHC.FROZEN)) {
                             main.setState(StateHC.RUNNING);
@@ -80,67 +90,28 @@ public class CommandHC implements CommandExecutor {
                         main.setState(StateHC.WAITING);
                         for(Player p : main.getPlayers()){
                             p.teleport(main.getLobbySpawn());
-                            p.setGameMode(GameMode.SURVIVAL);
+                            p.getInventory().clear();
+                            p.setGameMode(GameMode.ADVENTURE);
                         }
+                        try {
+                            Thread.sleep(1000);
+                        } catch(InterruptedException e){
+                            e.printStackTrace();
+                        }
+                        deleteWorlds();
+
+
                     }
 
                     if (args[0].equalsIgnoreCase("help")){
                         player.sendMessage("Type /hc start to start playing in hardcore. Type /hc freeze to save your progress and quit the session. Type /hc end to end it. If you die, the session will automatically be ended.");
                     }
 
-                    if (args[0].equalsIgnoreCase("create_world")){
-                        WorldCreator wc = new WorldCreator("hc_world");
-                        wc.environment(World.Environment.NORMAL);
-                        wc.generateStructures(true);
-                        World hc_world = wc.createWorld();
-                        Location hc_spawn = hc_world.getSpawnLocation();
-                        Block highest_block = hc_world.getHighestBlockAt(hc_spawn);
-                        hc_spawn.setY(highest_block.getY() +1 );
-                        main.setHcSpawn(hc_spawn);
-                        for(Player p : main.getPlayers()){
-                            p.teleport(hc_spawn);
-                            p.setRespawnLocation(hc_spawn);
-                        }
-
-
-                        WorldCreator wc_nether = new WorldCreator("hc_nether");
-                        wc_nether.environment(World.Environment.NETHER);
-                        wc_nether.generateStructures(true);
-                        wc_nether.createWorld();
-
-                        WorldCreator wc_end=  new WorldCreator("hc_end");
-                        wc_end.environment(World.Environment.THE_END);
-                        wc_end.generateStructures(true);
-                        wc_end.createWorld();
-
-
-                    }
-
-                    if (args[0].equalsIgnoreCase("delete_world")){
-                        File file = Bukkit.getServer().getWorldContainer();
-                        Bukkit.broadcastMessage(file.getPath());
-
-                    }
-
                     if (args[0].equalsIgnoreCase("get_world")){
                         Bukkit.broadcastMessage("You are in " + player.getWorld().getName());
                     }
-                    /*
-                    if (args[0].equalsIgnoreCase("current_timer")){
-                        player.sendMessage("Current timer is : " + main.getCurrentTimer());
-                    }
-                    */
 
-                    // Method to check setAbsorptionAmount behavior -> only works when Absorption is active. Capped to level of Absorption.
-                    /*
-                    if (args[0].equalsIgnoreCase("absorption")){
-                        if(args.length == 1){
-                            player.sendMessage("Missing value for absorption.");
-                        }
-                        String absorption = args[1];
-                        player.setAbsorptionAmount(Integer.parseInt(absorption));
-                    }
-                    */
+
                     // Obselete - Hunger will always be shared
                     /*
                     if (args[0].equalsIgnoreCase("hunger")){
@@ -173,7 +144,7 @@ public class CommandHC implements CommandExecutor {
         }
     }
 
-    public void createWorld(){
+    public void createWorlds(){
         WorldCreator wc = new WorldCreator("hc_world");
         wc.environment(World.Environment.NORMAL);
         wc.generateStructures(true);
@@ -181,13 +152,9 @@ public class CommandHC implements CommandExecutor {
         hcWorld.setDifficulty(Difficulty.HARD);
         Location hc_spawn = hcWorld.getSpawnLocation();
         Block highest_block = hcWorld.getHighestBlockAt(hc_spawn);
-        hc_spawn.setY(highest_block.getY() +1 );
-        main.setHcSpawn(hc_spawn);
-        for(Player p : main.getPlayers()){
-            p.teleport(hc_spawn);
-            p.setRespawnLocation(hc_spawn);
-        }
+        hc_spawn.setY(highest_block.getY() + 1);
 
+        main.setHcSpawn(hc_spawn);
 
         WorldCreator wc_nether = new WorldCreator("hc_nether");
         wc_nether.environment(World.Environment.NETHER);
@@ -195,14 +162,33 @@ public class CommandHC implements CommandExecutor {
         World netherWorld = wc_nether.createWorld();
         netherWorld.setDifficulty(Difficulty.HARD);
 
-        WorldCreator wc_end=  new WorldCreator("hc_end");
+        WorldCreator wc_end = new WorldCreator("hc_end");
         wc_end.environment(World.Environment.THE_END);
         wc_end.generateStructures(true);
         World endWorld = wc_end.createWorld();
         endWorld.setDifficulty(Difficulty.HARD);
-
+        Bukkit.broadcastMessage("§eWorlds have been created. Starting soon !");
     }
 
+    public void deleteWorlds(){
+        Bukkit.getServer().unloadWorld("hc_world", false);
+        deleteWorld(new File("hc_world"));
+        Bukkit.getServer().unloadWorld("hc_nether", false);
+        deleteWorld(new File("hc_nether"));
+        Bukkit.getServer().unloadWorld("hc_end", false);
+        deleteWorld(new File("hc_end"));
+    }
 
+    public void deleteWorld(File folder){
+        if(!folder.exists()) return;
+        if(folder.isFile()){
+            folder.delete();
+            return;
+        }
+        for(File file : folder.listFiles()){
+            deleteWorld(file);
+        }
+        folder.delete();
+    }
 
 }
