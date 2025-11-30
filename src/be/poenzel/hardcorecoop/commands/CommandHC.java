@@ -32,17 +32,17 @@ public class CommandHC implements CommandExecutor {
             if (cmd.getName().equalsIgnoreCase("hc")) {
 
                 if (args.length == 0) {
-                    player.sendMessage("Arguments missing. To get help, type /hc help.");
+                    player.sendMessage("§4[Hardcore Co-op] : Arguments missing. To get help, type /hc help.");
                 }
 
                 if (args.length >= 1){
                     if (args[0].equalsIgnoreCase("start")){
                         if(main.isState(StateHC.RUNNING)){
-                            player.sendMessage("The session is already running. To end it, type /hc end.");
+                            player.sendMessage("§4[Hardcore Co-op] : The session is already running. To end it, type /hc end.");
                             return true;
                         }
                         if(main.isState(StateHC.WAITING)){
-                            Bukkit.broadcastMessage("§aCreating worlds...");
+                            Bukkit.broadcastMessage("§4[Hardcore Co-op] §e: Creating worlds...");
                             createWorlds();
                             Bukkit.broadcastMessage("§7Teleporting players");
                             Location hc_spawn = main.getHcSpawn();
@@ -104,7 +104,7 @@ public class CommandHC implements CommandExecutor {
                     }
 
                     if (args[0].equalsIgnoreCase("help")){
-                        player.sendMessage("Type /hc start to start playing in hardcore. Type /hc freeze to save your progress and quit the session. Type /hc end to end it. If you die, the session will automatically be ended.");
+                        player.sendMessage("§4[Hardcore Co-op]  : Type /hc start to start playing in hardcore. Type /hc freeze to save your progress and quit the session. Type /hc end to end it. If you die, the session will automatically be ended.");
                     }
 
                     if (args[0].equalsIgnoreCase("get_world")){
@@ -155,19 +155,19 @@ public class CommandHC implements CommandExecutor {
         hc_spawn.setY(highest_block.getY() + 1);
 
         main.setHcSpawn(hc_spawn);
-
+        Bukkit.broadcastMessage("§4[Hardcore Co-op] §e : OverWorld created. Generating Nether...");
         WorldCreator wc_nether = new WorldCreator("hc_nether");
         wc_nether.environment(World.Environment.NETHER);
         wc_nether.generateStructures(true);
         World netherWorld = wc_nether.createWorld();
         netherWorld.setDifficulty(Difficulty.HARD);
-
+        Bukkit.broadcastMessage("§4[Hardcore Co-op] §e : Nether created. Generating The End...");
         WorldCreator wc_end = new WorldCreator("hc_end");
         wc_end.environment(World.Environment.THE_END);
         wc_end.generateStructures(true);
         World endWorld = wc_end.createWorld();
         endWorld.setDifficulty(Difficulty.HARD);
-        Bukkit.broadcastMessage("§eWorlds have been created. Starting soon !");
+        Bukkit.broadcastMessage("§4[Hardcore Co-op] §a : Worlds have been created. Starting soon !");
     }
 
     public void deleteWorlds(){

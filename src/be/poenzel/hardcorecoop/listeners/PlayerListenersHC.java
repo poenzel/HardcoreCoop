@@ -18,6 +18,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -66,9 +68,14 @@ public class PlayerListenersHC implements Listener {
         if (!main.isState(StateHC.RUNNING)) return;
         if (!main.getHunger()) return;
         Player player = (Player) event.getEntity();
+        int diff = 0;
+        if (main.getFoodLevel() > event.getFoodLevel()){
+            diff = (main.getFoodLevel() - event.getFoodLevel())/main.getPlayers().size();
+
+        }
         Integer foodLevel = player.getFoodLevel();
         //event.setCancelled(true);
-        main.setFoodLevel(event.getFoodLevel());
+        main.setFoodLevel(event.getFoodLevel()+diff);
         main.setSaturation(player.getSaturation());
 
     }
@@ -81,7 +88,6 @@ public class PlayerListenersHC implements Listener {
 
         Player player = (Player) event.getEntity();
 
-
         if(main.isHurt(player)){
             event.setCancelled(true);
             return;
@@ -89,9 +95,35 @@ public class PlayerListenersHC implements Listener {
             main.addHurtPlayer(player);
         }
 
-
         Double absorbedDamage = event.getOriginalDamage(EntityDamageEvent.DamageModifier.ABSORPTION);
         Double damageValue = event.getFinalDamage() - absorbedDamage;
+
+
+        // Calculate armor damage reduction - Negative value
+        double armorDamageReduction = event.getOriginalDamage(EntityDamageEvent.DamageModifier.ARMOR);
+
+        // Apply damage to armor pieces
+        if (Math.abs(armorDamageReduction) > 0) {
+            for (ItemStack armorPiece : player.getInventory().getArmorContents()) {
+                if (armorPiece != null && armorPiece.getType() != Material.AIR) {
+                    if (armorPiece.getItemMeta() instanceof Damageable) {
+                        Damageable damageable = (Damageable) armorPiece.getItemMeta();
+                        // You can set a maximum durability loss per hit if you want
+                        // Otherwise, this will use the item's max durability for the damage calculation
+                        damageable.setDamage(damageable.getDamage() + Math.min((int) Math.round(Math.abs(armorDamageReduction)) , 1)); // 4 damage points per 1 durability point
+                        armorPiece.setItemMeta((ItemMeta) damageable); // Update the item
+                    }
+                }
+            }
+        }
+
+        if(event.getDamage() >= 3 && player.isBlocking()){
+            if(player.getItemInUse().getType().equals(Material.SHIELD)){
+                Damageable shieldDmg = (Damageable) player.getItemInUse().getItemMeta();
+                shieldDmg.setDamage(shieldDmg.getDamage() + (int) Math.ceil(event.getDamage()));
+                player.getItemInUse().setItemMeta((ItemMeta) shieldDmg);
+            }
+        }
 
         Bukkit.broadcastMessage("§4[Hardcore Co-op] §8: §6" + player.getName() + "§8 took §c" + round(damageValue,1) + "§8 of damage");
 
@@ -138,17 +170,23 @@ public class PlayerListenersHC implements Listener {
         main.setAbsorption(absorption);
         main.setAbsorptionActive(absorption > 0);
 
+        if(player.isBlocking() && round(damageValue,1) == 0.0){
+            player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1f, 1f);
+        }
+
         for(Player p : main.getPlayers()){
             if(absorption==0){
                 p.removePotionEffect(PotionEffectType.ABSORPTION);
             }
-            p.playHurtAnimation(0);
-            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT,1f,1f);
+            if(round(damageValue,1) > 0) {
+                p.playHurtAnimation(0);
+                p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT, 1f, 1f);
+            }
         }
 
         if(health==0){
             main.setState(StateHC.FINISHED);
-            Bukkit.broadcastMessage("Game Over. To restart, type /hc end to go back to lobby.");
+            Bukkit.broadcastMessage("§4[Hardcore Co-op] §8: §cGame Over. To restart, type /hc end to go back to lobby.");
         }
 
 
@@ -163,7 +201,7 @@ public class PlayerListenersHC implements Listener {
 
         if(!main.isState(StateHC.RUNNING)) return;
         World fromWorld = e.getFrom().getWorld();
-        Bukkit.broadcastMessage("Type of portal event : "+ e.getCause().toString());
+        //Bukkit.broadcastMessage("Type of portal event : "+ e.getCause().toString());
         Player player = (Player) e.getPlayer();
         switch (e.getCause()) {
             case NETHER_PORTAL:
