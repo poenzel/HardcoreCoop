@@ -30,26 +30,55 @@ import static java.lang.Math.*;
 
 public class PlayerListenersHC implements Listener {
 
-    private HardcoreCoop main;
+    private final HardcoreCoop main;
 
     public PlayerListenersHC(HardcoreCoop main){
         this.main = main;
     }
 
+//    @EventHandler
+//    public void onJoin(PlayerJoinEvent event){
+//        System.out.println("CONNECTION DU JOUEUR");
+//        Player player = event.getPlayer();
+//        System.out.println("GETTING PLAYER");
+//        if(!main.getPlayers().contains(player)) main.getPlayers().add(player);
+//        if(main.isState(StateHC.FROZEN)){
+//            Location current_location = player.getLocation();
+//            current_location.setWorld(Bukkit.getWorld("hc_world"));
+//            player.teleport(current_location);
+//        }
+//        if(!main.isState(StateHC.WAITING)) return;
+//
+//        player.teleport(main.getLobbySpawn());
+//        player.setGameMode(GameMode.ADVENTURE);
+//    }
     @EventHandler
-    public void onJoin(PlayerJoinEvent event){
+    public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         if(!main.getPlayers().contains(player)) main.getPlayers().add(player);
-        if(main.isState(StateHC.FROZEN)){
-            Location current_location = player.getLocation();
-            current_location.setWorld(Bukkit.getWorld("hc_world"));
-            player.teleport(current_location);
-        }
-        if(!main.isState(StateHC.WAITING)) return;
+        Bukkit.getScheduler().runTask(main, () -> {
+            if (!player.isOnline()) return;
 
-        player.teleport(main.getLobbySpawn());
-        player.setGameMode(GameMode.ADVENTURE);
+            if (main.isState(StateHC.FROZEN)) {
+                World hc = Bukkit.getWorld("hc_world");
+                if (hc == null) { main.getLogger().severe("hc_world not loaded"); return; }
+                Location loc = player.getLocation();
+                loc.setWorld(hc);
+                player.teleport(loc);
+            }
+
+            if (!main.isState(StateHC.WAITING)) return;
+
+            Location lobby = main.getLobbySpawn();
+            if (lobby == null || lobby.getWorld() == null) {
+                main.getLogger().severe("Lobby spawn/world is null");
+                return;
+            }
+            player.teleport(lobby);
+            player.setGameMode(GameMode.ADVENTURE);
+        });
     }
+
 
     @EventHandler
     public void onHealthRegain(EntityRegainHealthEvent event){

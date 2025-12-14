@@ -4,6 +4,7 @@ import be.poenzel.hardcorecoop.listeners.PlayerListenersHC;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -52,6 +53,9 @@ public class HardcoreCoop extends JavaPlugin {
                    setState(StateHC.FROZEN);
                    System.out.println("THE PREVIOUS SESSION WAS FROZEN");
                    this.setCurrentTimer(readCurrentTimer());
+                   loadWorld("hc_world", World.Environment.NORMAL);
+                   loadWorld("hc_nether", World.Environment.NETHER);
+                   loadWorld("hc_end", World.Environment.THE_END);
                }
                else{
                    setState(StateHC.WAITING);
@@ -71,7 +75,7 @@ public class HardcoreCoop extends JavaPlugin {
         Location spawnLobby = Bukkit.getWorld("world").getSpawnLocation();
         spawnLobby.setY(lobby.getHighestBlockYAt(spawnLobby));
         this.lobbySpawn = spawnLobby;
-        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"gamerule logAdminCommands false");
+        //Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"gamerule logAdminCommands false");
 
     }
 
@@ -179,7 +183,25 @@ public class HardcoreCoop extends JavaPlugin {
         this.hurtedPlayers.put(player, 10);
     }
 
+    private World loadWorld(String name, World.Environment env) {
+        World w = Bukkit.getWorld(name);
+        if (w != null) return w;
 
+        WorldCreator wc = new WorldCreator(name);
+        wc.environment(env);
+
+        // If you want your settings consistent:
+        // wc.type(WorldType.NORMAL);
+        // wc.generateStructures(true);
+
+        w = Bukkit.createWorld(wc); // loads if folder exists, creates otherwise
+        if (w == null) {
+            getLogger().severe("Failed to load world: " + name);
+        } else {
+            getLogger().info("Loaded world: " + w.getName());
+        }
+        return w;
+    }
 
 
 
