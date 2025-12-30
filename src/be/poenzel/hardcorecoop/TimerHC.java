@@ -2,22 +2,16 @@ package be.poenzel.hardcorecoop;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.time.Duration;
-import java.util.List;
 
-import java.util.concurrent.TimeUnit;
 
 public class TimerHC extends BukkitRunnable {
 
-    private int timer = 0;
+    private int timer ;
     private HardcoreCoop main;
 
     public TimerHC(HardcoreCoop main){

@@ -8,7 +8,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class HealthUpdate extends BukkitRunnable {
 
-    private int timer = 0;
     private HardcoreCoop main;
 
     public HealthUpdate(HardcoreCoop main){
@@ -22,8 +21,8 @@ public class HealthUpdate extends BukkitRunnable {
             cancel();
         }
 
-        Integer amplifier = 0;
-        Integer duration = 0;
+        int amplifier = 0;
+        int duration = 0;
         boolean new_absorption_effect = false;
 
         for(Player p : main.getPlayers()){
@@ -52,8 +51,6 @@ public class HealthUpdate extends BukkitRunnable {
             }
 
         }
-
-
 
     }
 }
