@@ -22,7 +22,6 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,9 +67,9 @@ public class PlayerListenersHC implements Listener {
         if (!main.isState(StateHC.RUNNING)) return;
         if (!(event.getEntity() instanceof Player)) return;
         Player player = (Player) event.getEntity();
-        Double amount = event.getAmount();
+        double amount = event.getAmount();
         if(event.getRegainReason().equals(EntityRegainHealthEvent.RegainReason.SATIATED)) amount = amount/Math.max(main.getPlayers().size(),1);
-        Double targetHealth = player.getHealth();
+        double targetHealth = player.getHealth();
         main.setHealth(min(main.getHealth()+amount,20));
     }
 
@@ -106,8 +105,8 @@ public class PlayerListenersHC implements Listener {
             main.addHurtPlayer(player);
         }
 
-        Double absorbedDamage = event.getOriginalDamage(EntityDamageEvent.DamageModifier.ABSORPTION);
-        Double damageValue = event.getFinalDamage() - absorbedDamage;
+        double absorbedDamage = event.getOriginalDamage(EntityDamageEvent.DamageModifier.ABSORPTION);
+        double damageValue = event.getFinalDamage() - absorbedDamage;
 
 
         // Calculate armor damage reduction - Negative value
@@ -197,11 +196,7 @@ public class PlayerListenersHC implements Listener {
             main.setState(StateHC.FINISHED);
             Bukkit.broadcastMessage("§4[Hardcore Co-op] §8: §cGame Over. To restart, type /hc end to go back to lobby.");
         }
-
-
         event.setCancelled(true);
-
-
     }
 
 
