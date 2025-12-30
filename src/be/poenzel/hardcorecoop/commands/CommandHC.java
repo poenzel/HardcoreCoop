@@ -59,10 +59,6 @@ public class CommandHC implements CommandExecutor {
                         // Once FINISHED, state has to go back to WAITING before being launched again.
                         if(main.isState(StateHC.WAITING) || main.isState(StateHC.FROZEN)) {
                             main.setState(StateHC.RUNNING);
-                            // Difficulty to be set when getting world
-                            // World world = Bukkit.getWorld("hc_world");
-                            // world.setDifficulty(Difficulty.HARD);
-
                             TimerHC task = new TimerHC(main);
                             task.runTaskTimer(main, 0, 20);
                             HealthUpdate healthTask = new HealthUpdate(main);
@@ -100,32 +96,17 @@ public class CommandHC implements CommandExecutor {
                         }
                         deleteWorlds();
 
-
                     }
 
                     if (args[0].equalsIgnoreCase("help")){
-                        player.sendMessage("§4[Hardcore Co-op]  : Type /hc start to start playing in hardcore. Type /hc freeze to save your progress and quit the session. Type /hc end to end it. If you die, the session will automatically be ended.");
+                        player.sendMessage("§4[Hardcore Co-op] §e : Type /hc start to start playing in Hardcore. Type /hc freeze to save your progress and interrupt the session. Type /hc end to end it. If you die, the session will automatically be ended.");
                     }
 
                     if (args[0].equalsIgnoreCase("get_world")){
                         Bukkit.broadcastMessage("You are in " + player.getWorld().getName());
                     }
 
-
-                    // Obselete - Hunger will always be shared
-                    /*
-                    if (args[0].equalsIgnoreCase("hunger")){
-                        // TODO : Figure out of Hunger can be toggled on/off during session. Shouldn't have any impact.
-
-                        if(args.length == 1){
-                            player.sendMessage("Missing value for hunger. Type /hc hunger false if you want the hunger bar not to be shared.");
-                        }
-                        String hungerValue = args[1];
-                        main.setHunger(Boolean.parseBoolean(hungerValue));
-                    }
-                    */
                 }
-
 
             }
         }

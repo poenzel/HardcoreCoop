@@ -37,7 +37,6 @@ public class TimerHC extends BukkitRunnable {
             cancel();
         }
 
-        //Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"title @a actionbar '" + secondsToFormat(timer) +"'");
         for(Player p : main.getPlayers()){
             p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(secondsToFormat(timer)));
         }

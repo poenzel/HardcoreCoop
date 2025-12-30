@@ -190,10 +190,6 @@ public class HardcoreCoop extends JavaPlugin {
         WorldCreator wc = new WorldCreator(name);
         wc.environment(env);
 
-        // If you want your settings consistent:
-        // wc.type(WorldType.NORMAL);
-        // wc.generateStructures(true);
-
         w = Bukkit.createWorld(wc); // loads if folder exists, creates otherwise
         if (w == null) {
             getLogger().severe("Failed to load world: " + name);

@@ -36,22 +36,6 @@ public class PlayerListenersHC implements Listener {
         this.main = main;
     }
 
-//    @EventHandler
-//    public void onJoin(PlayerJoinEvent event){
-//        System.out.println("CONNECTION DU JOUEUR");
-//        Player player = event.getPlayer();
-//        System.out.println("GETTING PLAYER");
-//        if(!main.getPlayers().contains(player)) main.getPlayers().add(player);
-//        if(main.isState(StateHC.FROZEN)){
-//            Location current_location = player.getLocation();
-//            current_location.setWorld(Bukkit.getWorld("hc_world"));
-//            player.teleport(current_location);
-//        }
-//        if(!main.isState(StateHC.WAITING)) return;
-//
-//        player.teleport(main.getLobbySpawn());
-//        player.setGameMode(GameMode.ADVENTURE);
-//    }
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
@@ -63,7 +47,6 @@ public class PlayerListenersHC implements Listener {
                 World hc = Bukkit.getWorld("hc_world");
                 if (hc == null) { main.getLogger().severe("hc_world not loaded"); return; }
                 Location loc = player.getLocation();
-                loc.setWorld(hc);
                 player.teleport(loc);
             }
 
@@ -87,7 +70,6 @@ public class PlayerListenersHC implements Listener {
         Player player = (Player) event.getEntity();
         Double amount = event.getAmount();
         if(event.getRegainReason().equals(EntityRegainHealthEvent.RegainReason.SATIATED)) amount = amount/Math.max(main.getPlayers().size(),1);
-        //if(event.getRegainReason().equals(EntityRegainHealthEvent.RegainReason.EATING)) amount = amount/Math.max(main.getPlayers().size()-1,1);
         Double targetHealth = player.getHealth();
         main.setHealth(min(main.getHealth()+amount,20));
     }
@@ -103,7 +85,7 @@ public class PlayerListenersHC implements Listener {
 
         }
         Integer foodLevel = player.getFoodLevel();
-        //event.setCancelled(true);
+
         main.setFoodLevel(event.getFoodLevel()+diff);
         main.setSaturation(player.getSaturation());
 
@@ -169,8 +151,6 @@ public class PlayerListenersHC implements Listener {
             health = Math.max(0, health - damageValue);
         }
 
-        //Bukkit.broadcastMessage("Absorption : "+absorption +", Health : "+ health);
-
         if(health==0){
             PlayerInventory inv = player.getInventory();
             if(inv.getItemInMainHand().getType().equals(Material.TOTEM_OF_UNDYING) || inv.getItemInOffHand().getType().equals(Material.TOTEM_OF_UNDYING)) {
@@ -230,7 +210,6 @@ public class PlayerListenersHC implements Listener {
 
         if(!main.isState(StateHC.RUNNING)) return;
         World fromWorld = e.getFrom().getWorld();
-        //Bukkit.broadcastMessage("Type of portal event : "+ e.getCause().toString());
         Player player = (Player) e.getPlayer();
         switch (e.getCause()) {
             case NETHER_PORTAL:
@@ -252,13 +231,11 @@ public class PlayerListenersHC implements Listener {
             case END_PORTAL:
                 switch (fromWorld.getEnvironment()){
                     case NORMAL :
-                        //e.getTo().setWorld(Bukkit.getWorld("hc_end"));
                         Location newTo = e.getTo();
                         newTo.setWorld(Bukkit.getWorld("hc_end"));
                         e.setTo(newTo);
                         break;
                     case THE_END:
-                        //e.getTo().setWorld(Bukkit.getWorld("hc_world"));
                         Location newToWorld = e.getTo();
                         newToWorld.setWorld(Bukkit.getWorld("hc_world"));
                         e.setTo(newToWorld);
